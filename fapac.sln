@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fapac.Core", "src\Fapac.Core\Fapac.Core.fsproj", "{E500E0E4-3E30-46D8-8B02-390ADEBED15E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hopac.Core", "..\Hopac\Libs\Hopac.Core\Hopac.Core.csproj", "{411F95C0-7D64-4233-9395-A3495739EB50}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Debug|x64.Build.0 = Debug|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Debug|x86.Build.0 = Debug|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Release|x64.ActiveCfg = Release|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Release|x64.Build.0 = Release|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Release|x86.ActiveCfg = Release|Any CPU
+		{E500E0E4-3E30-46D8-8B02-390ADEBED15E}.Release|x86.Build.0 = Release|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Debug|x64.Build.0 = Debug|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Debug|x86.Build.0 = Debug|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Release|x64.ActiveCfg = Release|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Release|x64.Build.0 = Release|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Release|x86.ActiveCfg = Release|Any CPU
+		{411F95C0-7D64-4233-9395-A3495739EB50}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
