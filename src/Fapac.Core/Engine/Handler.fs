@@ -34,6 +34,7 @@ and [<AbstractClass>] Work =
           Next = ValueSome next }
 
     abstract DoWork : wr: Worker byref -> unit
+    abstract GetProc: wr: Worker byref -> Proc
 
     static member Do(work: Work, wr: Worker byref) =
 #if TRAMPOLINE

@@ -5,13 +5,21 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <WarnOn>3390;$(WarnOn)</WarnOn>
     <DefineConstants>$(DefineConstants);TRAMPOLINE</DefineConstants>
+    <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="Util\Unsafe.fs" />
     <Compile Include="Engine\Handler.fs" />
     <Compile Include="Engine\Scheduler.fs" />
+    <Compile Include="Flow\Cont.fs" />
     <Compile Include="Flow\Job.fs" />
+    <Compile Include="Selective\Alt.fs" />
+    <Compile Include="Engine\Proc.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="5.0.2" />
   </ItemGroup>
 
 </Project>
