@@ -14,8 +14,9 @@
     <Compile Include="Engine\Scheduler.fs" />
     <Compile Include="Flow\Cont.fs" />
     <Compile Include="Flow\Job.fs" />
-    <Compile Include="Selective\Alt.fs" />
-    <Compile Include="Engine\Proc.fs" />
+    <!-- <Compile Include="Selective\Alt.fs" /> -->
+    <!-- <Compile Include="Engine\Proc.fs" /> -->
+    <!-- <Compile Include="Communication\WaitQueue.fs" /> -->
   </ItemGroup>
 
   <ItemGroup>

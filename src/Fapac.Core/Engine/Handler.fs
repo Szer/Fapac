@@ -14,6 +14,12 @@ type WorkerEvent =
           Next = -1
           Me = me }
 
+type [<AbstractClass>] Pick =
+    inherit Else
+
+and [<AbstractClass>] Else =
+    val internal pK: Pick
+
 [<Struct>]
 type Worker =
     val mutable internal WorkStack: Work
@@ -69,3 +75,53 @@ and [<AbstractClass>] Handler() =
 //        tlh.Invoke(e).DoJob(ref wr, uK);
 //      }
 //    }
+
+and [<Sealed>] Proc() =
+    inherit Alt<unit>()
+
+    let [<VolatileField>] mutable State = 0
+    let mutable Joiners: Cont<unit> voption = ValueNone
+    let [<Literal>] Locked = -1
+    let [<Literal>] Running = 0
+    let [<Literal>] Terminated = 1
+
+    let rec doJob (stateRef: _ byref, joiners: _ byref, wr: Worker byref, uK: Cont<unit>) =
+        let state = stateRef
+        if state < Running then
+            doJob(&stateRef, &joiners, &wr, uK)
+        elif state > Running then
+            Work.Do(uK, &wr)
+        elif state <> Interlocked.CompareExchange(&stateRef, Locked, state) then
+            doJob(&stateRef, &joiners, &wr, uK)
+        else
+            Cont.addTaker (&joiners, uK)
+            stateRef <- Running
+
+    override this.DoJob(wr, uK) =
+        doJob(&State, &Joiners, &wr, uK)
+
+    override _.TryAlt(wr, i, uK, uE) = ()
+
+and [<AbstractClass>] Job<'a>() =
+    abstract DoJob: wr: Worker byref * aK: Cont<'a> -> unit
+
+and [<AbstractClass>] Alt<'a>() =
+    inherit Job<'a>()
+    
+    abstract TryAlt: wr: Worker byref * i: int * xK: Cont<'a> * xE: Else -> unit
+
+and [<AbstractClass>]  Cont<'a> =
+    inherit Work
+    val Value: 'a voption
+
+    abstract DoCont : wr: Worker byref * value: 'a -> unit
+    new() = { inherit Work(); Value = ValueNone }
+
+    static member addTaker (queue: Cont<'a> voption byref, xK: Cont<'a>): unit =
+      let last = queue
+      queue <- ValueSome xK
+      if last.IsNone then
+        xK.Next <- ValueSome (upcast xK)
+      else
+        xK.Next <- last.Value.Next
+        last.Value.Next <- ValueSome (upcast xK)
