@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="Util\Unsafe.fs" />
     <Compile Include="Engine\Handler.fs" />
-    <Compile Include="Engine\Scheduler.fs" />
     <Compile Include="Flow\Cont.fs" />
     <Compile Include="Flow\Job.fs" />
     <!-- <Compile Include="Selective\Alt.fs" /> -->

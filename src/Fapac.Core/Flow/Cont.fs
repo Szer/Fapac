@@ -7,6 +7,8 @@ type Cont<'a> =
     inherit Work
     val Value: 'a voption
 
+    abstract GetPick: me: int byref -> Pick option
+    default _.GetPick _ = None
     abstract DoCont : wr: Worker byref * value: 'a -> unit
     new() = { inherit Work(); Value = ValueNone }
 
