@@ -59,6 +59,13 @@ type [<AbstractClass>] Pick() =
             if nk.I0 > i || nk.I1 <= i then
                 Nack.Signal(&wr, next.Value)
             next <- next.Value.Next
+    
+    static member SetNacks(wr: Worker byref, i: int, pk: Pick) =
+        match pk.Nacks with
+        | Some nk ->
+            pk.Nacks <- None
+            Pick.SetNacks(&wr, i, nk)
+        | None -> ()
             
 and [<AbstractClass>] Else() =
     member val internal pK: Pick option = None with get, set
@@ -258,15 +265,14 @@ and [<Sealed>] Proc() =
             Cont.addTaker (&joiners, uK)
             stateRef <- Running
             
-    let rec terminatePick(wr: Worker byref, joinersRef: Cont<unit> byref, me: int byref) =
-        let mutable cursor = Some(joinersRef :> Work)
-        let joiner = joinersRef
-        cursor <- cursor.Value.Next
-        match joiner.GetPick &me with
+    let rec terminatePick(wr: Worker byref, cursorRef: Work option byref, joinersRef: Cont<unit> byref, me: int byref) =
+        let mutable cursor = cursorRef
+        cursor <- cursor.Next
+        match joinersRef.GetPick &me with
         | None ->
-            Worker.Push(&wr, joiner)
-            if cursor <> joiner then
-                failwith "TODO rec call"
+            Worker.Push(&wr, joinersRef)
+            if not <| Object.ReferenceEquals(cursor, joinersRef) then
+                terminatePick (&wr, &cursor, &me)
         | Some pk ->
             let rec pick (pk: Pick) =
                 let st = pk.TryPick()
@@ -275,12 +281,12 @@ and [<Sealed>] Proc() =
             let st = pick pk
             
             if st > 0 then
-                if cursor <> joiner then
+                if not <| Object.ReferenceEquals(cursor, joinersRef) then
                     failwith "TODO rec call"
             else
                 Pick.SetNacks(&wr, me, pk)
-                Worker.Push(&wr, joiner)
-                if cursor <> joiner then
+                Worker.Push(&wr, joinersRef)
+                if not <| Object.ReferenceEquals(cursor, joinersRef) then
                     failwith "TODO rec call"
         
     let rec terminate(stateRef: _ byref, joinersRef: _ byref, wr: Worker byref) =
@@ -330,14 +336,16 @@ and [<AbstractClass>] Alt<'a>() =
     
     abstract TryAlt: wr: Worker byref * i: int * xK: Cont<'a> * xE: Else -> unit
 
-and [<AbstractClass>]  Cont<'a> =
+and [<AbstractClass>] Cont<'a> =
     inherit Work
-    val Value: 'a option
+    val mutable Value: 'a option
 
     abstract DoCont : wr: Worker byref * value: 'a -> unit
     abstract GetPick: me: int byref -> Pick option
     default _.GetPick _ = None
     new() = { inherit Work(); Value = None }
+    
+
 
     static member addTaker (queue: Cont<'a> option byref, xK: Cont<'a>): unit =
       let last = queue
@@ -347,6 +355,49 @@ and [<AbstractClass>]  Cont<'a> =
       else
         xK.Next <- last.Value.Next
         last.Value.Next <- Some (upcast xK)
+        
+    static member pickReader<'a>(readersVar: Cont<'a> option byref, value: 'a option, wr: Worker byref): unit =
+      
+      let rec pickReader(cursorRef: Work option byref, me: int byref, value: 'a option, readers: Cont<'a>) =
+        let reader =
+            if cursorRef.IsSome then
+                cursorRef <- cursorRef.Value.Next
+                cursorRef.Value :?> Cont<'a>
+            else
+                failwith "imposibru" // No idea why it is impossible
+        
+        match reader.GetPick &me with
+        | None ->
+            reader.Value <- value
+            Worker.Push(&wr, reader)
+            
+            if not <| obj.ReferenceEquals(cursorRef, readers) then
+                pickReader(&cursorRef, &me, value, readers)
+        | Some pk ->
+            let rec tryPick(pk: Pick) =
+                let st = pk.TryPick()
+                if st < 0 then tryPick(pk)
+                else st
+            
+            let st = tryPick pk
+            if st > 0 then
+                if not <| obj.ReferenceEquals(cursorRef, readers) then
+                    pickReader(&cursorRef, &me, value, readers)
+            else
+                Pick.SetNacks(&wr, me, pk)
+                reader.Value <- value
+                Worker.Push(&wr, reader)
+                
+                if not <| obj.ReferenceEquals(cursorRef, readers) then
+                    pickReader(&cursorRef, &me, value, readers)
+      
+      let readers = readersVar
+      if readers.IsSome then
+          readersVar <- None
+          let mutable me = 0
+          let mutable cursor = Some (readers.Value :> Work)
+          pickReader(&cursor, &me, value, readers.Value)
+          
     
 and [<Sealed>] private Cont() = class
     inherit Cont<unit>()
@@ -445,16 +496,29 @@ and StaticData() =
 
 and [<Sealed>] Nack =
     inherit Promise<unit>
-    member val mutable internal Next: Nack option
-    [<DefaultValue>] val mutable internal I0: int
-    [<DefaultValue>] val mutable internal I1: int
-    new (next, i0) =
+    val mutable internal Next: Nack option
+    val mutable internal I0: int
+    val mutable internal I1: int
+    new (next, i0) as this =
         { inherit Promise<unit>()
+          I0 = i0
+          I1 = Int32.MaxValue
           Next = next }
+        
+    static member internal Signal(wr: Worker byref, nk: Nack) =
+        let rec signal(wr: Worker byref, nk: Nack) =
+            let state = nk.State
+            if state < Promise.Delayed then
+                signal(&wr, nk)
+            elif Promise.Running <> Interlocked.CompareExchange(&nk.State, state+1, state) then
+                signal(&wr, nk)
+            else
+                Cont.pickReader<unit>(&nk.Readers, None, &wr);
+        signal(&wr, nk)
+            
 and Promise<'a>() =
     inherit Alt<'a>()
     let [<VolatileField>] mutable state = Promise.Running
-
-    member this.State
-        with get() = state
-        and  set i = state <- i
+    [<DefaultValue>] val mutable internal Readers: Cont<'a>
+    
+    member _.State: int byref = &state
